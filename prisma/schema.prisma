@@ -16,13 +16,6 @@ datasource db {
  // extensions = [pg_trgm, uuid_ossp] // Enable useful PostgreSQL extensions
 }
 
-// Common fields for all models
-model BaseModel {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  isActive    Boolean   @default(true) @map("is_active")
-}
 
 // User roles
 enum Role {
@@ -32,7 +25,11 @@ enum Role {
 }
 
 // User model
-model User extends BaseModel {
+model User {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
   email       String    @unique
   password    String
   firstName   String    @map("first_name")
@@ -50,7 +47,11 @@ model User extends BaseModel {
 }
 
 // User profile (1:1 with User)
-model UserProfile extends BaseModel {
+model UserProfile {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
   bio         String?
   avatarUrl   String?   @map("avatar_url")
   phone       String?
@@ -64,7 +65,11 @@ model UserProfile extends BaseModel {
 }
 
 // Address model
-model Address extends BaseModel {
+model Address {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
   title       String
   receiver   String
   phone      String
@@ -76,12 +81,17 @@ model Address extends BaseModel {
   // Relations
   userId     String    @map("user_id")
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders     Order[]
   
   @@map("addresses")
 }
 
 // Product category
-model Category extends BaseModel {
+model Category {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
   name        String    @unique
   description String?
   imageUrl    String?   @map("image_url")
@@ -94,7 +104,11 @@ model Category extends BaseModel {
 }
 
 // Product model
-model Product extends BaseModel {
+model Product {
+  id            String    @id @default(uuid())
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  isActive      Boolean   @default(true) @map("is_active")
   name          String
   description   String
   price         Float
@@ -122,7 +136,11 @@ enum OrderStatus {
 }
 
 // Order model
-model Order extends BaseModel {
+model Order {
+  id           String      @id @default(uuid())
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  isActive     Boolean     @default(true) @map("is_active")
   orderNumber  String      @unique @map("order_number")
   totalAmount  Float       @map("total_amount")
   status       OrderStatus @default(PENDING)
@@ -139,7 +157,11 @@ model Order extends BaseModel {
 }
 
 // Order items (join table between Order and Product)
-model OrderItem extends BaseModel {
+model OrderItem {
+  id          String   @id @default(uuid())
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  isActive    Boolean  @default(true) @map("is_active")
   quantity    Int
   price      Float
   
