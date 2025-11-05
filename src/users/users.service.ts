@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { Role, User } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { Role, User } from "@prisma/client";
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UsersService {
@@ -25,9 +25,14 @@ export class UsersService {
     });
   }
 
-  async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password' | 'refreshToken'>> {
-    const hashedPassword = await bcrypt.hash(createUserDto.password, this.SALT_ROUNDS);
-    
+  async create(
+    createUserDto: CreateUserDto,
+  ): Promise<Omit<User, "password" | "refreshToken">> {
+    const hashedPassword = await bcrypt.hash(
+      createUserDto.password,
+      this.SALT_ROUNDS,
+    );
+
     const user = await this.prisma.user.create({
       data: {
         email: createUserDto.email,
@@ -58,7 +63,7 @@ export class UsersService {
   }
 
   async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ 
+    return this.prisma.user.findUnique({
       where: { email },
       include: {
         profile: true,
@@ -67,7 +72,7 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    const user = await this.prisma.user.findUnique({ 
+    const user = await this.prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
@@ -90,7 +95,10 @@ export class UsersService {
   }
 
   async updateRefreshToken(userId: string, refreshToken: string) {
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, this.SALT_ROUNDS);
+    const hashedRefreshToken = await bcrypt.hash(
+      refreshToken,
+      this.SALT_ROUNDS,
+    );
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: hashedRefreshToken },
