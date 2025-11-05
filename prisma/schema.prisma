@@ -1,0 +1,160 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+ // extensions = [pg_trgm, uuid_ossp] // Enable useful PostgreSQL extensions
+}
+
+// Common fields for all models
+model BaseModel {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
+}
+
+// User roles
+enum Role {
+  ADMIN
+  USER
+  GUEST
+}
+
+// User model
+model User extends BaseModel {
+  email       String    @unique
+  password    String
+  firstName   String    @map("first_name")
+  lastName    String    @map("last_name")
+  role        Role      @default(USER)
+  lastLogin   DateTime? @map("last_login")
+  refreshToken String?  @map("refresh_token")
+  
+  // Relations
+  profile     UserProfile?
+  orders      Order[]
+  addresses   Address[]
+  
+  @@map("users")
+}
+
+// User profile (1:1 with User)
+model UserProfile extends BaseModel {
+  bio         String?
+  avatarUrl   String?   @map("avatar_url")
+  phone       String?
+  dateOfBirth DateTime? @map("date_of_birth")
+  
+  // Relations
+  userId      String    @unique @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("user_profiles")
+}
+
+// Address model
+model Address extends BaseModel {
+  title       String
+  receiver   String
+  phone      String
+  city       String
+  district   String
+  address    String
+  isDefault  Boolean   @default(false) @map("is_default")
+  
+  // Relations
+  userId     String    @map("user_id")
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("addresses")
+}
+
+// Product category
+model Category extends BaseModel {
+  name        String    @unique
+  description String?
+  imageUrl    String?   @map("image_url")
+  slug        String    @unique
+  
+  // Relations
+  products    Product[]
+  
+  @@map("categories")
+}
+
+// Product model
+model Product extends BaseModel {
+  name          String
+  description   String
+  price         Float
+  stock         Int       @default(0)
+  sku           String    @unique
+  images        String[]  // Array of image URLs
+  isFeatured    Boolean   @default(false) @map("is_featured")
+  
+  // Relations
+  categoryId    String    @map("category_id")
+  category      Category  @relation(fields: [categoryId], references: [id])
+  orderItems    OrderItem[]
+  
+  @@map("products")
+}
+
+// Order status
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+// Order model
+model Order extends BaseModel {
+  orderNumber  String      @unique @map("order_number")
+  totalAmount  Float       @map("total_amount")
+  status       OrderStatus @default(PENDING)
+  notes        String?
+  
+  // Relations
+  userId       String      @map("user_id")
+  user         User        @relation(fields: [userId], references: [id])
+  addressId    String      @map("address_id")
+  address      Address     @relation(fields: [addressId], references: [id])
+  items        OrderItem[]
+  
+  @@map("orders")
+}
+
+// Order items (join table between Order and Product)
+model OrderItem extends BaseModel {
+  quantity    Int
+  price      Float
+  
+  // Relations
+  orderId    String  @map("order_id")
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId  String  @map("product_id")
+  product    Product @relation(fields: [productId], references: [id])
+  
+  @@unique([orderId, productId])
+  @@map("order_items")
+}
+
+// Add indexes for better query performance
+// @@index([email]) // Already handled by @unique
+// @@index([categoryId])
+// @@index([status])
+// @@index([createdAt])

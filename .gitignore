@@ -94,3 +94,4 @@ web-repl
 *.code-workspace
 
 node_modules/
+/generated/prisma
