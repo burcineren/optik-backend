@@ -27,26 +27,28 @@ async function main() {
     data: {
       email: 'admin@example.com',
       password: adminPassword,
-      name: 'Admin',
+      name: 'Admin User',
       role: Role.ADMIN,
       profile: {
         create: {
           bio: 'System Administrator',
-          phone: '+1234567890',
+          phone: '+1987654321',
         },
       },
     },
   });
   console.log(`✅ Created admin user with ID: ${admin.id}`);
 
-  // Create test user
-  console.log('👤 Creating test user...');
+  // Create regular user with address
+  console.log('👤 Creating regular user with address...');
   const userPassword = await bcrypt.hash('user123', SALT_ROUNDS);
+  
+  // First create the user with profile
   const user = await prisma.user.create({
     data: {
       email: 'user@example.com',
       password: userPassword,
-      name: 'Test',
+      name: 'Regular User',
       role: Role.USER,
       profile: {
         create: {
@@ -54,22 +56,29 @@ async function main() {
           phone: '+1987654321',
         },
       },
-      addresses: {
-        create: [
-          {
-            title: 'Home',
-            receiver: 'Test User',
-            phone: '+1987654321',
-            city: 'Istanbul',
-            district: 'Kadikoy',
-            address: 'Example Street No:123',
-            isDefault: true,
-          },
-        ],
-      },
+    },
+    include: {
+      addresses: true
+    }
+  });
+
+  // Then create the address separately
+  const address = await prisma.address.create({
+    data: {
+      userId: user.id,
+      title: 'Home',
+      receiver: 'Regular User',
+      phone: '+1987654321',
+      city: 'Istanbul',
+      district: 'Kadikoy',
+      address: 'Example Street No:123',
+      isDefault: true,
     },
   });
-  console.log(`✅ Created test user with ID: ${user.id}`);
+
+  // Update the user object to include the address
+  user.addresses = [address];
+  console.log(`✅ Created regular user with ID: ${user.id}`);
 
   // Create categories
   console.log('📦 Creating categories...');
@@ -145,7 +154,7 @@ async function main() {
       totalAmount: products[0].price * 2 + products[1].price, // 2 of first product, 1 of second
       status: 'PENDING',
       userId: user.id,
-      addressId: (await prisma.address.findFirst({ where: { userId: user.id } }))!.id,
+      addressId: address.id,
       items: {
         create: [
           {
