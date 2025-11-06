@@ -27,8 +27,7 @@ async function main() {
     data: {
       email: 'admin@example.com',
       password: adminPassword,
-      firstName: 'Admin',
-      lastName: 'User',
+      name: 'Admin',
       role: Role.ADMIN,
       profile: {
         create: {
@@ -47,8 +46,7 @@ async function main() {
     data: {
       email: 'user@example.com',
       password: userPassword,
-      firstName: 'Test',
-      lastName: 'User',
+      name: 'Test',
       role: Role.USER,
       profile: {
         create: {

@@ -32,8 +32,7 @@ model User {
   isActive    Boolean   @default(true) @map("is_active")
   email       String    @unique
   password    String
-  firstName   String    @map("first_name")
-  lastName    String    @map("last_name")
+  name        String    @map("name")
   role        Role      @default(USER)
   lastLogin   DateTime? @map("last_login")
   refreshToken String?  @map("refresh_token")

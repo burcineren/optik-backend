@@ -11,11 +11,7 @@ import { Role } from "@prisma/client";
 export class CreateUserDto {
   @IsString()
   @IsNotEmpty()
-  firstName: string;
-
-  @IsString()
-  @IsNotEmpty()
-  lastName: string;
+  name: string;
 
   @IsEmail()
   email: string;

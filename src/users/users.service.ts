@@ -8,15 +8,14 @@ import * as bcrypt from "bcrypt";
 export class UsersService {
   private readonly SALT_ROUNDS = 10;
 
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async findAll() {
     return this.prisma.user.findMany({
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -37,8 +36,7 @@ export class UsersService {
       data: {
         email: createUserDto.email,
         password: hashedPassword,
-        firstName: createUserDto.firstName,
-        lastName: createUserDto.lastName,
+        name: createUserDto.name,
         role: createUserDto.role || Role.USER,
         lastLogin: null,
         refreshToken: null,
@@ -46,8 +44,7 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         lastLogin: true,
@@ -77,8 +74,7 @@ export class UsersService {
       select: {
         id: true,
         email: true,
-        firstName: true,
-        lastName: true,
+        name: true,
         role: true,
         isActive: true,
         createdAt: true,
