@@ -8,7 +8,7 @@ import * as bcrypt from "bcrypt";
 export class UsersService {
   private readonly SALT_ROUNDS = 10;
 
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async findAll() {
     return this.prisma.user.findMany({

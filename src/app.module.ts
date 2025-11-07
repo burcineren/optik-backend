@@ -11,4 +11,4 @@ import { StockModule } from "./stock/stock.module";
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

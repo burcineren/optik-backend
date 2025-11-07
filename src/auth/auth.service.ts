@@ -1,16 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { RegisterDto } from './dto/register.dto';
-import { Role } from '@prisma/client';
+import { Injectable } from "@nestjs/common";
+import { UsersService } from "../users/users.service";
+import * as bcrypt from "bcrypt";
+import { JwtService } from "@nestjs/jwt";
+import { RegisterDto } from "./dto/register.dto";
+import { Role } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
   constructor(
     private usersService: UsersService,
-    private jwtService: JwtService
-  ) { }
+    private jwtService: JwtService,
+  ) {}
 
   async validateUser(email: string, pass: string) {
     const user = await this.usersService.findByEmail(email);
@@ -36,7 +36,7 @@ export class AuthService {
       name: registerDto.name || "",
       email: registerDto.email,
       password: hashed,
-      role: registerDto.role || Role.USER
+      role: registerDto.role || Role.USER,
     });
     return this.login(user);
   }

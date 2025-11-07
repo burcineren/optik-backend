@@ -1,5 +1,12 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
-import { StockMovementType, StockMovementStatus } from '@prisma/client';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from "class-validator";
+import { StockMovementType, StockMovementStatus } from "@prisma/client";
 
 export class CreateStockDto {
   @IsEnum(StockMovementType)
