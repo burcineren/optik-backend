@@ -102,7 +102,7 @@ model Category {
   @@map("categories")
 }
 
-// Product model
+// Product model with variants support
 model Product {
   id            String    @id @default(uuid())
   createdAt     DateTime  @default(now()) @map("created_at")
@@ -110,19 +110,97 @@ model Product {
   isActive      Boolean   @default(true) @map("is_active")
   name          String
   description   String
-  price         Float
-  stock         Int       @default(0)
-  sku           String    @unique
+  price         Float     @default(0)  // Base price, can be overridden by variants
+  stock         Int       @default(0)  // Total stock across all variants
+  sku           String?   @unique      // Base SKU, can be overridden by variants
   images        String[]  // Array of image URLs
   isFeatured    Boolean   @default(false) @map("is_featured")
   
   // Relations
   categoryId    String    @map("category_id")
   category      Category  @relation(fields: [categoryId], references: [id])
+  variants      ProductVariant[]
   orderItems    OrderItem[]
   
   @@map("products")
 }
+
+// Stock movement types
+enum StockMovementType {
+  PURCHASE     // Stok girişi
+  SALE         // Satış
+  RETURN       // İade
+  ADJUSTMENT   // Düzeltme
+  TRANSFER     // Transfer
+  LOSS         // Zayi
+  DAMAGED      // Hasarlı
+  OTHER        // Diğer
+}
+
+// Stock movement status
+enum StockMovementStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+// Product variant
+model ProductVariant {
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  sku         String    @unique
+  barcode     String?   @unique
+  name        String
+  description String?
+  price       Float     @default(0)
+  costPrice   Float?    @map("cost_price")
+  stock       Int       @default(0)
+  minStock    Int       @default(5) @map("min_stock")
+  maxStock    Int?      @map("max_stock")
+  weight      Float?    @default(0) // in grams
+  dimensions  String?   // Format: "LxWxH" in cm
+  
+  // Relations
+  productId   String    @map("product_id")
+  product     Product   @relation(fields: [productId], references: [id])
+  
+  // Stock movements
+  stockMovements StockMovement[]
+  
+  @@map("product_variants")
+}
+
+// Stock movement
+model StockMovement {
+  id              String            @id @default(uuid())
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  movementType    StockMovementType @map("movement_type")
+  status          StockMovementStatus @default(PENDING)
+  quantity        Int
+  unitPrice       Float             @map("unit_price")  // Birim fiyat
+  totalPrice      Float             @map("total_price") // Toplam fiyat
+  referenceNo     String?           @map("reference_no") // Fatura/İrsaliye no
+  notes           String?           // Açıklama
+  movementDate    DateTime          @default(now()) @map("movement_date") // İşlem tarihi
+  
+  // Relations
+  variantId       String           @map("variant_id")
+  variant         ProductVariant   @relation(fields: [variantId], references: [id])
+  
+  // User who made the movement
+  userId          String?          @map("user_id")
+  //user            User?            @relation(fields: [userId], references: [id])
+  
+  // Related order (if any)
+  orderId         String?          @map("order_id")
+ //order           Order?           @relation(fields: [orderId], references: [id])
+  
+  @@map("stock_movements")
+}
+
 
 // Order status
 enum OrderStatus {
