@@ -1,12 +1,26 @@
-import { Controller, Get, Param, UseGuards, Req, UsePipes, ValidationPipe } from '@nestjs/common';
-import { StockService } from './stock.service';
+import {
+  Controller,
+  Get,
+  Body,
+  Post,
+  Req,
+  UsePipes,
+  ValidationPipe,
+} from "@nestjs/common";
+import { StockService } from "./stock.service";
+import { CreateStockDto } from "./dto/create.stock.dto";
 
-@Controller('stock')
+@Controller("stock")
 export class StockController {
-    constructor(private stockService: StockService) { }
+  constructor(private stockService: StockService) {}
 
-    @Get()
-    async findAll() {
-        return this.stockService.findAll();
-    }
+  @Get()
+  async findAll() {
+    return this.stockService.findAll();
+  }
+
+  @Post()
+  async create(@Body() createStockDto: CreateStockDto) {
+    return this.stockService.create(createStockDto);
+  }
 }
