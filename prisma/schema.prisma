@@ -60,7 +60,52 @@ model UserProfile {
   userId      String    @unique @map("user_id")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   
+  // Customer relation (one-to-one)
+ // customer    Customer? @relation("CustomerProfile")
+  
   @@map("user_profiles")
+}
+
+model Customer {
+    id          String    @id @default(uuid())
+    createdAt   DateTime  @default(now()) @map("created_at")
+    updatedAt   DateTime  @updatedAt @map("updated_at")
+    isActive    Boolean   @default(true) @map("is_active")
+    tcIdentityNumber String   @unique @db.VarChar(11) @map("tc_identity_number")
+    fullName        String    @map("full_name")
+    phoneNumber      String?  @map("phone_number") // Optional phone number (nullable)
+    email            String?  @map("email")        // Optional email address (nullable)
+    address          String?  @map("address")      // Optional customer address (nullable)
+    
+    // Relations
+    //profile     UserProfile? @relation("CustomerProfile")
+   // orders      Order[]
+   // addresses   Address[]
+
+    // Relation Fields
+    // One-to-one relation assumption: A customer can have one relative record.
+   // relative    Relative?
+    @@map("customers")
+}
+model Relative {
+  // Fields
+  id               Int      @id @default(autoincrement()) // Auto-increment primary key
+  
+  // Relative Details
+  fullName         String   @map("full_name")
+  
+  // T.C. Identity Number: Not set to @unique as it might not be required 
+  // to be unique across all relatives, or the same relative might be 
+  // registered for different customers (e.g., a family member).
+  tcIdentityNumber String   @db.VarChar(11) @map("tc_identity_number")
+  
+  // Relation Fields
+  // Foreign key to the Customer model.
+  // @unique ensures a one-to-one relationship (one relative record per customer).
+  customerId       Int      @unique @map("customer_id")
+  //customer         Customer @relation(fields: [customerId], references: [id])
+  
+  @@map("relatives") // Defines the database table name
 }
 
 // Address model
@@ -229,8 +274,13 @@ model Order {
   addressId    String      @map("address_id")
   address      Address     @relation(fields: [addressId], references: [id])
   items        OrderItem[]
-  
+
+  // Relation Fields
+  customerId       Int      @map("customer_id")
+// customer         Customer @relation(fields: [customerId], references: [id])
+
   @@map("orders")
+  
 }
 
 // Order items (join table between Order and Product)
