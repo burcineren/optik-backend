@@ -276,8 +276,8 @@ model Order {
   items        OrderItem[]
 
   // Relation Fields
-  customerId       Int      @map("customer_id")
-// customer         Customer @relation(fields: [customerId], references: [id])
+  customerId       String   @map("customer_id")
+  //customer         Customer @relation(fields: [customerId], references: [id])
 
   @@map("orders")
   

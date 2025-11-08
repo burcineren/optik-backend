@@ -42,7 +42,7 @@ async function main() {
   // Create regular user with address
   console.log('👤 Creating regular user with address...');
   const userPassword = await bcrypt.hash('user123', SALT_ROUNDS);
-  
+
   // First create the user with profile
   const user = await prisma.user.create({
     data: {
@@ -146,6 +146,19 @@ async function main() {
   ]);
   console.log(`✅ Created ${products.length} products`);
 
+  // Create a customer first
+  console.log('👥 Creating a customer...');
+  const customer = await prisma.customer.create({
+    data: {
+      tcIdentityNumber: '12345678901',
+      fullName: 'John Doe',
+      phoneNumber: '5551234567',
+      email: 'john.doe@example.com',
+      address: '123 Main St, Anytown'
+    },
+  });
+  console.log(`✅ Created customer with ID: ${customer.id}`);
+
   // Create an order
   console.log('🛒 Creating a sample order...');
   const order = await prisma.order.create({
@@ -155,6 +168,7 @@ async function main() {
       status: 'PENDING',
       userId: user.id,
       addressId: address.id,
+      customerId: customer.id,
       items: {
         create: [
           {
