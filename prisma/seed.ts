@@ -17,6 +17,7 @@ async function main() {
   await prisma.address.deleteMany();
   await prisma.userProfile.deleteMany();
   await prisma.user.deleteMany();
+  await prisma.customer.deleteMany();
 
   console.log('✅ Database cleared');
 

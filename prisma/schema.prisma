@@ -67,7 +67,7 @@ model UserProfile {
 }
 
 model Customer {
-    id          String    @id @default(uuid())
+    id        String   @id @default(uuid())
     createdAt   DateTime  @default(now()) @map("created_at")
     updatedAt   DateTime  @updatedAt @map("updated_at")
     isActive    Boolean   @default(true) @map("is_active")
@@ -78,18 +78,17 @@ model Customer {
     address          String?  @map("address")      // Optional customer address (nullable)
     
     // Relations
-    //profile     UserProfile? @relation("CustomerProfile")
-   // orders      Order[]
+    orders    Order[]
    // addresses   Address[]
 
     // Relation Fields
     // One-to-one relation assumption: A customer can have one relative record.
-   // relative    Relative?
+   relative    Relative?
     @@map("customers")
 }
 model Relative {
   // Fields
-  id               Int      @id @default(autoincrement()) // Auto-increment primary key
+  id               String      @id @default(uuid()) // Auto-increment primary key
   
   // Relative Details
   fullName         String   @map("full_name")
@@ -102,8 +101,8 @@ model Relative {
   // Relation Fields
   // Foreign key to the Customer model.
   // @unique ensures a one-to-one relationship (one relative record per customer).
-  customerId       Int      @unique @map("customer_id")
-  //customer         Customer @relation(fields: [customerId], references: [id])
+  customerId       String      @unique @map("customer_id")
+  customer         Customer @relation(fields: [customerId], references: [id])
   
   @@map("relatives") // Defines the database table name
 }
@@ -259,28 +258,29 @@ enum OrderStatus {
 
 // Order model
 model Order {
-  id           String      @id @default(uuid())
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  isActive     Boolean     @default(true) @map("is_active")
-  orderNumber  String      @unique @map("order_number")
-  totalAmount  Float       @map("total_amount")
-  status       OrderStatus @default(PENDING)
-  notes        String?
-  
-  // Relations
-  userId       String      @map("user_id")
-  user         User        @relation(fields: [userId], references: [id])
-  addressId    String      @map("address_id")
-  address      Address     @relation(fields: [addressId], references: [id])
-  items        OrderItem[]
+  id           String      @id @default(uuid())
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+  isActive     Boolean     @default(true) @map("is_active")
+  orderNumber  String      @unique @map("order_number")
+  totalAmount  Float       @map("total_amount")
+  status       OrderStatus @default(PENDING)
+  notes        String?
+  
+  // Relations
+  userId       String      @map("user_id")
+  user         User        @relation(fields: [userId], references: [id])
+  addressId    String      @map("address_id")
+  address      Address     @relation(fields: [addressId], references: [id])
+  items        OrderItem[]
 
-  // Relation Fields
-  customerId       String   @map("customer_id")
-  //customer         Customer @relation(fields: [customerId], references: [id])
+  // Relation Fields
+  // DÜZELTME: Burayı 'Int' yerine 'String' yapın
+  customerId      String   @map("customer_id")
+  customer         Customer @relation(fields: [customerId], references: [id])
 
-  @@map("orders")
-  
+  @@map("orders")
+  
 }
 
 // Order items (join table between Order and Product)
