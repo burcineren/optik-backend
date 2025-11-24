@@ -10,7 +10,7 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   async validateUser(email: string, pass: string) {
     const user = await this.usersService.findByEmail(email);
@@ -50,5 +50,13 @@ export class AuthService {
       role: registerDto.role || Role.USER,
     });
     return this.login(user);
+  }
+
+  async getUserProfile(userId: string) {
+    return this.usersService.findById(userId);
+  }
+
+  async getAllUsers() {
+    return this.usersService.findAll();
   }
 }
