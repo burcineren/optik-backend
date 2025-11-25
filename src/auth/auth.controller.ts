@@ -12,6 +12,7 @@ import {
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto } from "./dto/register.dto";
 import { JwtAuthGuard } from "./jwt-auth.guard";
+import { AuthGuard } from "@nestjs/passport";
 
 @Controller("auth")
 export class AuthController {
@@ -34,30 +35,22 @@ export class AuthController {
     return this.authService.login(user);
   }
 
+  @UseGuards(AuthGuard("jwt"))
   @Get("me")
-  async getProfile(@Query('userId') userId?: string) {
-    if (userId) {
-      const user = await this.authService.getUserProfile(userId);
-      return {
-        success: true,
-        data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            fullName: user.name,
-            role: user.role,
-          },
-        },
-        message: "User profile retrieved successfully",
-      };
-    }
+  async getProfile(@Request() req) {
+    const user = req.user; // This is set by the JwtAuthGuard
 
-    // If no userId is provided, return all users (or handle differently)
-    const users = await this.authService.getAllUsers();
     return {
       success: true,
-      data: { users },
-      message: "Users retrieved successfully",
+      data: {
+        user: {
+          id: user.sub,
+          email: user.email,
+          fullName: user.name,
+          role: user.role,
+        },
+      },
+      message: "User profile retrieved successfully",
     };
   }
 }
