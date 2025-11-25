@@ -1,9 +1,4 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// Prisma Schema - Optik Mağaza Yönetim Sistemi
 
 generator client {
   provider = "prisma-client-js"
@@ -13,39 +8,38 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
- // extensions = [pg_trgm, uuid_ossp] // Enable useful PostgreSQL extensions
 }
 
+// ============================================
+// KULLANICI YÖNETİMİ
+// ============================================
 
-// User roles
 enum Role {
   ADMIN
   USER
   GUEST
 }
 
-// User model
 model User {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  isActive    Boolean   @default(true) @map("is_active")
-  email       String    @unique
-  password    String
-  name        String    @map("name")
-  role        Role      @default(USER)
-  lastLogin   DateTime? @map("last_login")
-  refreshToken String?  @map("refresh_token")
+  id           String    @id @default(uuid())
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  isActive     Boolean   @default(true) @map("is_active")
+  email        String    @unique
+  password     String
+  name         String
+  role         Role      @default(USER)
+  lastLogin    DateTime? @map("last_login")
+  refreshToken String?   @map("refresh_token")
   
-  // Relations
-  profile     UserProfile?
-  orders      Order[]
-  addresses   Address[]
+  profile        UserProfile?
+  orders         Order[]
+  addresses      Address[]
+  stockMovements StockMovement[]
   
   @@map("users")
 }
 
-// User profile (1:1 with User)
 model UserProfile {
   id          String    @id @default(uuid())
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -56,80 +50,68 @@ model UserProfile {
   phone       String?
   dateOfBirth DateTime? @map("date_of_birth")
   
-  // Relations
   userId      String    @unique @map("user_id")
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Customer relation (one-to-one)
- // customer    Customer? @relation("CustomerProfile")
   
   @@map("user_profiles")
 }
 
-model Customer {
-    id        String   @id @default(uuid())
-    createdAt   DateTime  @default(now()) @map("created_at")
-    updatedAt   DateTime  @updatedAt @map("updated_at")
-    isActive    Boolean   @default(true) @map("is_active")
-    tcIdentityNumber String   @unique @db.VarChar(11) @map("tc_identity_number")
-    fullName        String    @map("full_name")
-    phoneNumber      String?  @map("phone_number") // Optional phone number (nullable)
-    email            String?  @map("email")        // Optional email address (nullable)
-    address          String?  @map("address")      // Optional customer address (nullable)
-    
-    // Relations
-    orders    Order[]
-   // addresses   Address[]
+// ============================================
+// MÜŞTERİ YÖNETİMİ
+// ============================================
 
-    // Relation Fields
-    // One-to-one relation assumption: A customer can have one relative record.
-   relative    Relative?
-    @@map("customers")
+model Customer {
+  id               String    @id @default(uuid())
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  isActive         Boolean   @default(true) @map("is_active")
+  tcIdentityNumber String    @unique @db.VarChar(11) @map("tc_identity_number")
+  fullName         String    @map("full_name")
+  phoneNumber      String?   @map("phone_number")
+  email            String?
+  address          String?
+  
+  orders           Order[]
+  relative         Relative?
+  
+  @@map("customers")
 }
+
 model Relative {
-  // Fields
-  id               String      @id @default(uuid()) // Auto-increment primary key
-  
-  // Relative Details
+  id               String   @id @default(uuid())
   fullName         String   @map("full_name")
-  
-  // T.C. Identity Number: Not set to @unique as it might not be required 
-  // to be unique across all relatives, or the same relative might be 
-  // registered for different customers (e.g., a family member).
   tcIdentityNumber String   @db.VarChar(11) @map("tc_identity_number")
   
-  // Relation Fields
-  // Foreign key to the Customer model.
-  // @unique ensures a one-to-one relationship (one relative record per customer).
-  customerId       String      @unique @map("customer_id")
-  customer         Customer @relation(fields: [customerId], references: [id])
+  customerId       String   @unique @map("customer_id")
+  customer         Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   
-  @@map("relatives") // Defines the database table name
+  @@map("relatives")
 }
 
-// Address model
 model Address {
-  id          String    @id @default(uuid())
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  isActive    Boolean   @default(true) @map("is_active")
-  title       String
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  isActive   Boolean  @default(true) @map("is_active")
+  title      String
   receiver   String
   phone      String
   city       String
   district   String
   address    String
-  isDefault  Boolean   @default(false) @map("is_default")
+  isDefault  Boolean  @default(false) @map("is_default")
   
-  // Relations
-  userId     String    @map("user_id")
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String   @map("user_id")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders     Order[]
   
   @@map("addresses")
 }
 
-// Product category
+// ============================================
+// ÜRÜN YÖNETİMİ
+// ============================================
+
 model Category {
   id          String    @id @default(uuid())
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -140,55 +122,53 @@ model Category {
   imageUrl    String?   @map("image_url")
   slug        String    @unique
   
-  // Relations
   products    Product[]
   
   @@map("categories")
 }
 
-// Product model with variants support
 model Product {
-  id            String    @id @default(uuid())
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-  isActive      Boolean   @default(true) @map("is_active")
-  name          String
-  description   String
-  price         Float     @default(0)  // Base price, can be overridden by variants
-  stock         Int       @default(0)  // Total stock across all variants
-  sku           String?   @unique      // Base SKU, can be overridden by variants
-  images        String[]  // Array of image URLs
-  isFeatured    Boolean   @default(false) @map("is_featured")
+  id          String    @id @default(uuid())
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  isActive    Boolean   @default(true) @map("is_active")
+  name        String
+  description String
+  price       Float     @default(0)
+  stock       Int       @default(0)
+  sku         String?   @unique
+  images      String[]
+  isFeatured  Boolean   @default(false) @map("is_featured")
   
-  // Relations
-  categoryId    String    @map("category_id")
-  category      Category  @relation(fields: [categoryId], references: [id])
-  variants      ProductVariant[]
-  orderItems    OrderItem[]
+  categoryId  String    @map("category_id")
+  category    Category  @relation(fields: [categoryId], references: [id])
+  variants    ProductVariant[]
+  orderItems  OrderItem[]
   
   @@map("products")
 }
 
-// Stock movement types
+// ============================================
+// STOK YÖNETİMİ
+// ============================================
+
 enum StockMovementType {
-  PURCHASE     // Stok girişi
-  SALE         // Satış
-  RETURN       // İade
-  ADJUSTMENT   // Düzeltme
-  TRANSFER     // Transfer
-  LOSS         // Zayi
-  DAMAGED      // Hasarlı
-  OTHER        // Diğer
+  PURCHASE
+  SALE
+  RETURN
+  ADJUSTMENT
+  TRANSFER
+  LOSS
+  DAMAGED
+  OTHER
 }
 
-// Stock movement status
 enum StockMovementStatus {
   PENDING
   COMPLETED
   CANCELLED
 }
 
-// Product variant
 model ProductVariant {
   id          String    @id @default(uuid())
   createdAt   DateTime  @default(now()) @map("created_at")
@@ -203,107 +183,199 @@ model ProductVariant {
   stock       Int       @default(0)
   minStock    Int       @default(5) @map("min_stock")
   maxStock    Int?      @map("max_stock")
-  weight      Float?    @default(0) // in grams
-  dimensions  String?   // Format: "LxWxH" in cm
+  weight      Float?    @default(0)
+  dimensions  String?
   
-  // Relations
-  productId   String    @map("product_id")
-  product     Product   @relation(fields: [productId], references: [id])
-  
-  // Stock movements
+  productId      String @map("product_id")
+  product        Product @relation(fields: [productId], references: [id])
   stockMovements StockMovement[]
   
   @@map("product_variants")
 }
 
-// Stock movement
 model StockMovement {
-  id              String            @id @default(uuid())
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  movementType    StockMovementType @map("movement_type")
-  status          StockMovementStatus @default(PENDING)
-  quantity        Int
-  unitPrice       Float             @map("unit_price")  // Birim fiyat
-  totalPrice      Float             @map("total_price") // Toplam fiyat
-  referenceNo     String?           @map("reference_no") // Fatura/İrsaliye no
-  notes           String?           // Açıklama
-  movementDate    DateTime          @default(now()) @map("movement_date") // İşlem tarihi
+  id           String              @id @default(uuid())
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  movementType StockMovementType   @map("movement_type")
+  status       StockMovementStatus @default(PENDING)
+  quantity     Int
+  unitPrice    Float               @map("unit_price")
+  totalPrice   Float               @map("total_price")
+  referenceNo  String?             @map("reference_no")
+  notes        String?
+  movementDate DateTime            @default(now()) @map("movement_date")
   
-  // Relations
-  variantId       String           @map("variant_id")
-  variant         ProductVariant   @relation(fields: [variantId], references: [id])
+  variantId String         @map("variant_id")
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
   
-  // User who made the movement
-  userId          String?          @map("user_id")
-  //user            User?            @relation(fields: [userId], references: [id])
+  userId  String? @map("user_id")
+  user    User?   @relation(fields: [userId], references: [id])
   
-  // Related order (if any)
-  orderId         String?          @map("order_id")
- //order           Order?           @relation(fields: [orderId], references: [id])
+  orderId String? @map("order_id")
+  order   Order?  @relation(fields: [orderId], references: [id])
   
   @@map("stock_movements")
 }
 
+// ============================================
+// SİPARİŞ YÖNETİMİ
+// ============================================
 
-// Order status
 enum OrderStatus {
-  PENDING
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
+  PENDING      // Beklemede
+  PROCESSING   // İşleniyor
+  READY        // Hazır
+  DELIVERED    // Teslim Edildi
+  CANCELLED    // İptal
+  REFUNDED     // İade
 }
 
-// Order model
+enum PrescriptionType {
+  MANUAL      // Manuel Reçete
+  E_RECETE    // E-Reçete
+}
+
 model Order {
-  id           String      @id @default(uuid())
-  createdAt    DateTime    @default(now()) @map("created_at")
-  updatedAt    DateTime    @updatedAt @map("updated_at")
-  isActive     Boolean     @default(true) @map("is_active")
-  orderNumber  String      @unique @map("order_number")
-  totalAmount  Float       @map("total_amount")
-  status       OrderStatus @default(PENDING)
-  notes        String?
-  
-  // Relations
-  userId       String      @map("user_id")
-  user         User        @relation(fields: [userId], references: [id])
-  addressId    String      @map("address_id")
-  address      Address     @relation(fields: [addressId], references: [id])
-  items        OrderItem[]
-
-  // Relation Fields
-  // DÜZELTME: Burayı 'Int' yerine 'String' yapın
-  customerId      String   @map("customer_id")
-  customer         Customer @relation(fields: [customerId], references: [id])
-
-  @@map("orders")
-  
+  id             String           @id @default(uuid())
+  createdAt      DateTime         @default(now()) @map("created_at")
+  updatedAt      DateTime         @updatedAt @map("updated_at")
+  isActive       Boolean          @default(true) @map("is_active")
+  orderNumber    String           @unique @map("order_number")
+  
+  // Sipariş Tarihleri
+  orderDate      DateTime         @default(now()) @map("order_date")
+  deliveryDate   DateTime?        @map("delivery_date")
+  
+  // Ödeme Bilgileri
+  totalAmount    Float            @map("total_amount")
+  sgkAmount      Float            @default(0) @map("sgk_amount")
+  remainingAmount Float           @default(0) @map("remaining_amount")
+  
+  status         OrderStatus      @default(PENDING)
+  prescriptionType PrescriptionType? @map("prescription_type")
+  notes          String?
+  
+  // İlişkiler
+  userId    String  @map("user_id")
+  user      User    @relation(fields: [userId], references: [id])
+  
+  customerId String   @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id])
+  
+  addressId String?  @map("address_id")
+  address   Address? @relation(fields: [addressId], references: [id])
+  
+  items           OrderItem[]
+  prescriptions   Prescription[]
+  frames          Frame[]
+  stockMovements  StockMovement[]
+  
+  @@map("orders")
 }
 
-// Order items (join table between Order and Product)
 model OrderItem {
-  id          String   @id @default(uuid())
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-  isActive    Boolean  @default(true) @map("is_active")
-  quantity    Int
-  price      Float
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  isActive  Boolean  @default(true) @map("is_active")
+  quantity  Int
+  price     Float
   
-  // Relations
-  orderId    String  @map("order_id")
-  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId  String  @map("product_id")
-  product    Product @relation(fields: [productId], references: [id])
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
   
   @@unique([orderId, productId])
   @@map("order_items")
 }
 
-// Add indexes for better query performance
-// @@index([email]) // Already handled by @unique
-// @@index([categoryId])
-// @@index([status])
-// @@index([createdAt])
+// ============================================
+// REÇETE VE GÖZLÜK BİLGİLERİ
+// ============================================
+
+enum EyeSide {
+  RIGHT  // Sağ
+  LEFT   // Sol
+}
+
+model Prescription {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Göz Tarafı
+  eyeSide   EyeSide  @map("eye_side")
+  
+  // Uzak Görüş
+  distanceSign String? @default("+") @map("distance_sign") // + veya -
+  distanceSph  Float?  @map("distance_sph")
+  distanceCyl  Float?  @map("distance_cyl")
+  distanceAx   Int?    @map("distance_ax")
+  
+  // Yakın Görüş
+  nearSign String? @default("+") @map("near_sign") // + veya -
+  nearSph  Float?  @map("near_sph")
+  nearCyl  Float?  @map("near_cyl")
+  nearAx   Int?    @map("near_ax")
+  
+  // Addisyon (Otomatik hesaplanır ama kaydedilir)
+  addition Float?  @map("addition")
+  
+  // Diğer Ölçümler
+  pd       Float?  @map("pd")        // Pupil Distance
+  height   Float?  @map("height")    // Yükseklik
+  diameter Float?  @map("diameter")  // Çap
+  
+  orderId  String  @map("order_id")
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  lenses   Lens[]
+  
+  @@map("prescriptions")
+}
+
+model Lens {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Lens Özellikleri
+  lensType     String?  @map("lens_type")      // single, bifocal, progressive, office
+  material     String?  @map("material")        // cr39, polycarbonate, high-index, trivex
+  coating      String?  @map("coating")         // none, anti-reflective, blue-light, photochromic, polarized
+  lensIndex    String?  @map("lens_index")      // 1.5, 1.56, 1.6, 1.67, 1.74
+  
+  prescriptionId String       @map("prescription_id")
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id], onDelete: Cascade)
+  
+  @@map("lenses")
+}
+
+model Frame {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  
+  // Çerçeve Bilgileri
+  brand String? // Marka
+  model String? // Model
+  color String? // Renk
+  type  String? // Cinsi (Kemik, Metal, vb.)
+  
+  orderId String @map("order_id")
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@map("frames")
+}
+
+// ============================================
+// İNDEXLER
+// ============================================
+
+// Performans için önemli indeksler otomatik oluşturulur:
+// - @unique alanlar
+// - Foreign key'ler
+// - Sık sorgulanan alanlar için ek indeksler eklenebilir
