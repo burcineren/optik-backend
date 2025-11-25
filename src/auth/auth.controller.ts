@@ -7,16 +7,16 @@ import {
   ValidationPipe,
   Request,
   UseGuards,
-  Query,
+  Res,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
 import { RegisterDto, LoginDto } from "./dto/register.dto";
-import { JwtAuthGuard } from "./jwt-auth.guard";
 import { AuthGuard } from "@nestjs/passport";
+import type { Response } from "express";
 
 @Controller("auth")
 export class AuthController {
-  constructor(private authService: AuthService) { }
+  constructor(private authService: AuthService) {}
 
   @Post("register")
   @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -33,6 +33,14 @@ export class AuthController {
     );
     if (!user) throw new Error("Invalid credentials");
     return this.authService.login(user);
+  }
+  @Post("logout")
+  async logout(@Res({ passthrough: true }) response: Response) {
+    response.clearCookie("authToken");
+    return {
+      success: true,
+      message: "User logged out successfully",
+    };
   }
 
   @UseGuards(AuthGuard("jwt"))

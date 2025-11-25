@@ -57,6 +57,29 @@ export class AuthService {
     return this.login(user);
   }
 
+  async logout(user: any) {
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+      name: user.name,
+    };
+    const accessToken = this.jwtService.sign(payload);
+    return {
+      success: true,
+      accessToken,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          fullName: user.name,
+          role: user.role,
+        },
+      },
+      message: "Logout successful",
+    };
+  }
+
   async getUserProfile(userId: string) {
     return this.usersService.findById(userId);
   }
