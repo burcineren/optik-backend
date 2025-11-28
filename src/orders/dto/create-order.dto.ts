@@ -8,13 +8,29 @@ import {
   IsArray,
   ValidateNested,
   IsDateString,
-  IsBoolean,
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderStatus, PrescriptionType, EyeSide } from '@prisma/client';
 
-// Based on schema.prisma and the frontend form
+// This DTO matches the nested structure for distance and near measurements
+class EyeMeasurementDto {
+  @IsString()
+  @IsOptional()
+  sign?: string;
+
+  @IsNumber()
+  @IsOptional()
+  sph?: number;
+
+  @IsNumber()
+  @IsOptional()
+  cyl?: number;
+
+  @IsNumber()
+  @IsOptional()
+  ax?: number;
+}
 
 class CreateRelativeDto {
   @IsString()
@@ -76,37 +92,15 @@ class CreatePrescriptionDto {
   @IsNotEmpty()
   eyeSide: EyeSide;
 
-  @IsString()
+  @ValidateNested()
+  @Type(() => EyeMeasurementDto)
   @IsOptional()
-  distanceSign?: string;
+  distance?: EyeMeasurementDto;
 
-  @IsNumber()
+  @ValidateNested()
+  @Type(() => EyeMeasurementDto)
   @IsOptional()
-  distanceSph?: number;
-
-  @IsNumber()
-  @IsOptional()
-  distanceCyl?: number;
-
-  @IsNumber()
-  @IsOptional()
-  distanceAx?: number;
-
-  @IsString()
-  @IsOptional()
-  nearSign?: string;
-
-  @IsNumber()
-  @IsOptional()
-  nearSph?: number;
-
-  @IsNumber()
-  @IsOptional()
-  nearCyl?: number;
-
-  @IsNumber()
-  @IsOptional()
-  nearAx?: number;
+  near?: EyeMeasurementDto;
 
   @IsNumber()
   @IsOptional()

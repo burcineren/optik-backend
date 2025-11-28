@@ -80,12 +80,24 @@ export class OrdersService {
       // 4. Create Prescriptions and Lenses
       if (prescriptions && prescriptions.length > 0) {
         for (const pres of prescriptions) {
-          const { lenses, ...prescriptionData } = pres;
+          const { lenses, distance, near, ...restOfPrescription } = pres;
+
+          // Manually map the nested DTO structure to the flat Prisma model structure
+          const prismaPrescriptionData = {
+            ...restOfPrescription,
+            distanceSign: distance?.sign,
+            distanceSph: distance?.sph,
+            distanceCyl: distance?.cyl,
+            distanceAx: distance?.ax,
+            nearSign: near?.sign,
+            nearSph: near?.sph,
+            nearCyl: near?.cyl,
+            nearAx: near?.ax,
+            orderId: order.id,
+          };
+
           const createdPrescription = await tx.prescription.create({
-            data: {
-              ...prescriptionData,
-              orderId: order.id,
-            },
+            data: prismaPrescriptionData,
           });
 
           if (lenses && lenses.length > 0) {
