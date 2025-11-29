@@ -1,11 +1,10 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createOrderDto: CreateOrderDto, userId: string) {
     const {
@@ -44,11 +43,11 @@ export class OrdersService {
             address: customerData.address,
             relative: customerData.relative
               ? {
-                  create: {
-                    fullName: customerData.relative.fullName,
-                    tcIdentityNumber: customerData.relative.tcIdentityNumber,
-                  },
-                }
+                create: {
+                  fullName: customerData.relative.fullName,
+                  tcIdentityNumber: customerData.relative.tcIdentityNumber,
+                },
+              }
               : undefined,
           },
         });
@@ -110,7 +109,7 @@ export class OrdersService {
           }
         }
       }
-      
+
       // Return the complete order
       return tx.order.findUnique({
         where: { id: order.id },

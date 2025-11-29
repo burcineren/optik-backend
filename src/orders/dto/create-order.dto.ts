@@ -11,7 +11,7 @@ import {
   Min,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { OrderStatus, PrescriptionType, EyeSide } from '@prisma/client';
+import { OrderStatus, EyeSide, PrescriptionType } from '@prisma/client';
 
 // This DTO matches the nested structure for distance and near measurements
 class EyeMeasurementDto {

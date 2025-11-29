@@ -233,7 +233,7 @@ enum OrderStatus {
 
 enum PrescriptionType {
   MANUAL      // Manuel Reçete
-  E_RECETE    // E-Reçete
+  E_RECIPE    // E-Reçete
 }
 
 model Order {
