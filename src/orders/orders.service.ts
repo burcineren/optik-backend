@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -123,6 +124,19 @@ export class OrdersService {
           },
         },
       });
+    });
+  }
+
+  async update(id: string, updateOrderDto: UpdateOrderDto) {
+    // Separate relational fields from the direct order fields
+    const { customer, frames, prescriptions, customerId, ...orderData } =
+      updateOrderDto;
+
+    // For now, this method only updates the scalar fields of the order.
+    // Updating relations would require more complex logic (e.g., deleting and recreating).
+    return this.prisma.order.update({
+      where: { id },
+      data: orderData,
     });
   }
 

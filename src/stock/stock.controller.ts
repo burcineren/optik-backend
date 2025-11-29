@@ -3,16 +3,13 @@ import {
   Get,
   Body,
   Post,
-  Req,
-  UsePipes,
-  ValidationPipe,
 } from "@nestjs/common";
 import { StockService } from "./stock.service";
 import { CreateStockDto } from "./dto/create.stock.dto";
 
 @Controller("stock")
 export class StockController {
-  constructor(private stockService: StockService) {}
+  constructor(private stockService: StockService) { }
 
   @Get()
   async findAll() {
