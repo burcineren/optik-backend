@@ -8,12 +8,12 @@ import {
   Delete,
   UsePipes,
   ValidationPipe,
-} from '@nestjs/common';
-import { CustomersService } from './customers.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
+} from "@nestjs/common";
+import { CustomersService } from "./customers.service";
+import { CreateCustomerDto } from "./dto/create-customer.dto";
+import { UpdateCustomerDto } from "./dto/update-customer.dto";
 
-@Controller('customers')
+@Controller("customers")
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
@@ -28,19 +28,22 @@ export class CustomersController {
     return this.customersService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  findOne(@Param("id") id: string) {
     return this.customersService.findOne(id);
   }
 
-  @Patch(':id')
+  @Patch(":id")
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  update(@Param('id') id: string, @Body() updateCustomerDto: UpdateCustomerDto) {
+  update(
+    @Param("id") id: string,
+    @Body() updateCustomerDto: UpdateCustomerDto,
+  ) {
     return this.customersService.update(id, updateCustomerDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(":id")
+  remove(@Param("id") id: string) {
     return this.customersService.remove(id);
   }
 }

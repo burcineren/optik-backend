@@ -8,7 +8,7 @@ import * as bcrypt from "bcrypt";
 export class UsersService {
   private readonly SALT_ROUNDS = 10;
 
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async findAll() {
     return this.prisma.user.findMany({
@@ -68,8 +68,8 @@ export class UsersService {
         refreshToken: true,
         createdAt: true,
         updatedAt: true,
-        profile: true
-      }
+        profile: true,
+      },
     });
   }
 
@@ -123,5 +123,12 @@ export class UsersService {
     if (isRefreshTokenMatching) {
       return user;
     }
+  }
+
+  async updateUserPassword(email: string, hashedPassword: string) {
+    return this.prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
   }
 }

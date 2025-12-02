@@ -10,16 +10,25 @@ export class AuthService {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   async validateUser(email: string, pass: string) {
+    console.log("Validating user with email:", email);
     const user = await this.usersService.findByEmail(email);
-    if (!user) return null;
+    console.log("User found in DB:", user ? "Yes" : "No");
+
+    if (!user) {
+      console.log("User not found");
+      return null;
+    }
+
     const matched = await bcrypt.compare(pass, user.password);
+
     if (matched) {
       const { password, ...result } = user;
       return result;
     }
+
     return null;
   }
 

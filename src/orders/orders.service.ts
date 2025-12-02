@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateOrderDto } from "./dto/create-order.dto";
+import { UpdateOrderDto } from "./dto/update-order.dto";
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createOrderDto: CreateOrderDto, userId: string) {
     const {
@@ -31,7 +35,9 @@ export class OrdersService {
           where: { id: customerId },
         });
         if (!existingCustomer) {
-          throw new NotFoundException(`Customer with ID ${customerId} not found.`);
+          throw new NotFoundException(
+            `Customer with ID ${customerId} not found.`,
+          );
         }
         finalCustomerId = existingCustomer.id;
       } else if (customerData) {
@@ -44,23 +50,26 @@ export class OrdersService {
             address: customerData.address,
             relative: customerData.relative
               ? {
-                create: {
-                  fullName: customerData.relative.fullName,
-                  tcIdentityNumber: customerData.relative.tcIdentityNumber,
-                },
-              }
+                  create: {
+                    fullName: customerData.relative.fullName,
+                    tcIdentityNumber: customerData.relative.tcIdentityNumber,
+                  },
+                }
               : undefined,
           },
         });
         finalCustomerId = newCustomer.id;
       } else {
-        throw new BadRequestException('Either customerId or a new customer object must be provided.');
+        throw new BadRequestException(
+          "Either customerId or a new customer object must be provided.",
+        );
       }
 
       // 2. Create the Order
       const order = await tx.order.create({
         data: {
           ...orderData,
+
           orderNumber,
           userId,
           customerId: finalCustomerId,
@@ -140,37 +149,48 @@ export class OrdersService {
     });
   }
 
-  findAll() {
-    return this.prisma.order.findMany({
+  async findAll() {
+    const orders = await this.prisma.order.findMany({
       include: {
         customer: true,
         user: {
           select: {
             id: true,
             name: true,
-          }
-        }
+          },
+        },
+        payments: true, // Include payments to calculate paid amount
       },
       orderBy: {
-        orderDate: 'desc'
-      }
+        orderDate: "desc",
+      },
+    });
+
+    // Calculate paidAmount for each order
+    return orders.map((order) => {
+      const paidAmount = order.payments.reduce((sum, p) => sum + p.amount, 0);
+      const { payments, ...orderData } = order;
+      return {
+        ...orderData,
+        paidAmount,
+      };
     });
   }
 
-  findOne(id: string) {
-    return this.prisma.order.findUnique({
+  async findOne(id: string) {
+    const order = await this.prisma.order.findUnique({
       where: { id },
       include: {
         customer: {
           include: {
             relative: true,
-          }
+          },
         },
         user: {
           select: {
             id: true,
             name: true,
-          }
+          },
         },
         frames: true,
         prescriptions: {
@@ -178,7 +198,21 @@ export class OrdersService {
             lenses: true,
           },
         },
+        payments: true, // Include payments
       },
     });
+
+    if (!order) {
+      throw new NotFoundException(`Order with ID ${id} not found.`);
+    }
+
+    // Calculate paidAmount for the single order
+    const paidAmount = order.payments.reduce((sum, p) => sum + p.amount, 0);
+    const { payments, ...orderData } = order;
+
+    return {
+      ...orderData,
+      paidAmount,
+    };
   }
 }

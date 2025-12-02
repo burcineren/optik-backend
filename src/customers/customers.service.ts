@@ -1,12 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
-import { Customer } from '@prisma/client';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "../prisma/prisma.service";
+import { CreateCustomerDto } from "./dto/create-customer.dto";
+import { UpdateCustomerDto } from "./dto/update-customer.dto";
+import { Customer } from "@prisma/client";
 
 @Injectable()
 export class CustomersService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
     return this.prisma.customer.create({
@@ -28,7 +28,10 @@ export class CustomersService {
     return customer;
   }
 
-  async update(id: string, updateCustomerDto: UpdateCustomerDto): Promise<Customer> {
+  async update(
+    id: string,
+    updateCustomerDto: UpdateCustomerDto,
+  ): Promise<Customer> {
     return this.prisma.customer.update({
       where: { id: id },
       data: updateCustomerDto,

@@ -1,4 +1,3 @@
-
 import {
   IsString,
   IsNotEmpty,
@@ -9,9 +8,9 @@ import {
   ValidateNested,
   IsDateString,
   Min,
-} from 'class-validator';
-import { Type } from 'class-transformer';
-import { OrderStatus, EyeSide, PrescriptionType } from '@prisma/client';
+} from "class-validator";
+import { Type } from "class-transformer";
+import { OrderStatus, EyeSide, PrescriptionType } from "@prisma/client";
 
 // This DTO matches the nested structure for distance and near measurements
 class EyeMeasurementDto {
@@ -148,6 +147,10 @@ export class CreateOrderDto {
   @IsOptional()
   @IsString()
   customerId?: string;
+
+  @IsString()
+  @IsOptional()
+  fullName?: string;
 
   @IsOptional()
   @ValidateNested()
