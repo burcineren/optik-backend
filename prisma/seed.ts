@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient, Role, OrderStatus, PaymentMethod, EyeSide, PrescriptionType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -8,16 +8,21 @@ const SALT_ROUNDS = 10;
 async function main() {
   console.log('🌱 Starting database seeding...');
 
-  // Clear existing data
+  // Clear existing data in the correct order to avoid constraint violations
   console.log('🧹 Clearing existing data...');
+  await prisma.payment.deleteMany();
+  await prisma.lens.deleteMany();
+  await prisma.prescription.deleteMany();
+  await prisma.frame.deleteMany();
   await prisma.orderItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.product.deleteMany();
   await prisma.category.deleteMany();
   await prisma.address.deleteMany();
   await prisma.userProfile.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.relative.deleteMany();
   await prisma.customer.deleteMany();
+  await prisma.user.deleteMany();
 
   console.log('✅ Database cleared');
 
@@ -30,166 +35,153 @@ async function main() {
       password: adminPassword,
       name: 'Admin User',
       role: Role.ADMIN,
-      profile: {
-        create: {
-          bio: 'System Administrator',
-          phone: '+1987654321',
-        },
-      },
     },
   });
-  console.log(`✅ Created admin user with ID: ${admin.id}`);
+  console.log(`✅ Created admin user: ${admin.email}`);
 
-  // Create regular user with address
-  console.log('👤 Creating regular user with address...');
+  // Create regular user
+  console.log('👤 Creating regular user...');
   const userPassword = await bcrypt.hash('user123', SALT_ROUNDS);
-
-  // First create the user with profile
   const user = await prisma.user.create({
     data: {
       email: 'user@example.com',
       password: userPassword,
       name: 'Regular User',
       role: Role.USER,
-      profile: {
-        create: {
-          bio: 'Regular User',
-          phone: '+1987654321',
-        },
-      },
     },
-    include: {
-      addresses: true
-    }
   });
+  console.log(`✅ Created regular user: ${user.email}`);
 
-  // Then create the address separately
-  const address = await prisma.address.create({
+  // Create customers
+  console.log('👥 Creating customers...');
+  const customer1 = await prisma.customer.create({
     data: {
-      userId: user.id,
-      title: 'Home',
-      receiver: 'Regular User',
-      phone: '+1987654321',
-      city: 'Istanbul',
-      district: 'Kadikoy',
-      address: 'Example Street No:123',
-      isDefault: true,
+      tcIdentityNumber: '11111111111',
+      fullName: 'Ahmet Yılmaz',
+      phoneNumber: '5551112233',
+      email: 'ahmet.yilmaz@example.com',
+      address: 'Göztepe Mah. İstanbul',
     },
   });
 
-  // Update the user object to include the address
-  user.addresses = [address];
-  console.log(`✅ Created regular user with ID: ${user.id}`);
-
-  // Create categories
-  console.log('📦 Creating categories...');
-  const categories = await prisma.$transaction([
-    prisma.category.create({
-      data: {
-        name: 'Sunglasses',
-        description: 'Stylish sunglasses for all occasions',
-        slug: 'sunglasses',
-        imageUrl: 'https://example.com/images/sunglasses.jpg',
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Eyeglasses',
-        description: 'Prescription and reading glasses',
-        slug: 'eyeglasses',
-        imageUrl: 'https://example.com/images/eyeglasses.jpg',
-      },
-    }),
-    prisma.category.create({
-      data: {
-        name: 'Contact Lenses',
-        description: 'Daily and monthly contact lenses',
-        slug: 'contact-lenses',
-        imageUrl: 'https://example.com/images/contacts.jpg',
-      },
-    }),
-  ]);
-  console.log(`✅ Created ${categories.length} categories`);
-
-  // Create products
-  console.log('🛍️ Creating products...');
-  const products = await prisma.$transaction([
-    prisma.product.create({
-      data: {
-        name: 'Classic Aviator Sunglasses',
-        description: 'Timeless aviator sunglasses with UV protection',
-        price: 149.99,
-        stock: 50,
-        sku: 'SUN001',
-        images: [
-          'https://example.com/images/aviator1.jpg',
-          'https://example.com/images/aviator2.jpg',
-        ],
-        isFeatured: true,
-        categoryId: categories[0].id,
-      },
-    }),
-    prisma.product.create({
-      data: {
-        name: 'Modern Round Eyeglasses',
-        description: 'Stylish round eyeglasses with blue light filter',
-        price: 199.99,
-        stock: 30,
-        sku: 'EYE001',
-        images: [
-          'https://example.com/images/round1.jpg',
-          'https://example.com/images/round2.jpg',
-        ],
-        isFeatured: true,
-        categoryId: categories[1].id,
-      },
-    }),
-  ]);
-  console.log(`✅ Created ${products.length} products`);
-
-  // Create a customer first
-  console.log('👥 Creating a customer...');
-  const customer = await prisma.customer.create({
+  const customer2 = await prisma.customer.create({
     data: {
-      tcIdentityNumber: '12345678901',
-      fullName: 'John Doe',
-      phoneNumber: '5551234567',
-      email: 'john.doe@example.com',
-      address: '123 Main St, Anytown'
+      tcIdentityNumber: '22222222222',
+      fullName: 'Zeynep Kaya',
+      phoneNumber: '5554445566',
+      email: 'zeynep.kaya@example.com',
+      address: 'Alsancak, İzmir',
     },
   });
-  console.log(`✅ Created customer with ID: ${customer.id}`);
+  console.log(`✅ Created ${[customer1, customer2].length} customers`);
 
-  // Create an order
-  console.log('🛒 Creating a sample order...');
-  const order = await prisma.order.create({
+  // --- ORDER 1 for Ahmet Yılmaz ---
+  console.log(`🛒 Creating a detailed order for ${customer1.fullName}...`);
+  const order1 = await prisma.order.create({
     data: {
-      orderNumber: `ORD-${Date.now()}`,
-      totalAmount: products[0].price * 2 + products[1].price, // 2 of first product, 1 of second
-      status: 'PENDING',
-      userId: user.id,
-      addressId: address.id,
-      customerId: customer.id,
-      items: {
+      orderNumber: `ORD-${Date.now()}-1`,
+      totalAmount: 1850.0,
+      sgkAmount: 250.0,
+      remainingAmount: 1600.0,
+      status: OrderStatus.PROCESSING,
+      prescriptionType: PrescriptionType.E_RECIPE,
+      notes: 'Mavi ışık filtresi ve inceltme istendi.',
+      userId: admin.id,
+      customerId: customer1.id,
+      frames: {
         create: [
           {
-            productId: products[0].id,
-            quantity: 2,
-            price: products[0].price,
+            brand: 'Ray-Ban',
+            model: 'Wayfarer',
+            color: 'Siyah',
+            type: 'Asetat',
+          },
+        ],
+      },
+      prescriptions: {
+        create: [
+          {
+            eyeSide: EyeSide.RIGHT,
+            distanceSph: -1.75,
+            distanceCyl: -0.5,
+            distanceAx: 90,
+            lenses: {
+              create: {
+                lensType: 'single',
+                material: 'polycarbonate',
+                coating: 'blue-light',
+                lensIndex: '1.59',
+              },
+            },
           },
           {
-            productId: products[1].id,
-            quantity: 1,
-            price: products[1].price,
+            eyeSide: EyeSide.LEFT,
+            distanceSph: -2.0,
+            distanceCyl: -0.25,
+            distanceAx: 85,
+          },
+        ],
+      },
+      payments: {
+        create: [
+          {
+            amount: 800.0,
+            paymentMethod: PaymentMethod.CREDIT_CARD,
+            notes: 'Kredi kartı ön ödeme',
           },
         ],
       },
     },
-    include: {
-      items: true,
+  });
+  console.log(`✅ Created order #${order1.orderNumber}`);
+
+  // --- ORDER 2 for Zeynep Kaya ---
+  console.log(`🛒 Creating a detailed order for ${customer2.fullName}...`);
+  const order2 = await prisma.order.create({
+    data: {
+      orderNumber: `ORD-${Date.now()}-2`,
+      totalAmount: 3200.0,
+      sgkAmount: 0,
+      remainingAmount: 3200.0,
+      status: OrderStatus.PENDING,
+      prescriptionType: PrescriptionType.MANUAL,
+      notes: 'Sadece güneş gözlüğü, numarasız.',
+      userId: user.id,
+      customerId: customer2.id,
+      frames: {
+        create: [
+          {
+            brand: 'Prada',
+            model: 'PR 17WS',
+            color: 'Siyah/Altın',
+            type: 'Kombine',
+          },
+          {
+            brand: 'Gucci',
+            model: 'GG0516S',
+            color: 'Havana',
+            type: 'Asetat',
+          },
+        ],
+      },
+      // No prescription for this order
+      payments: {
+        create: [
+          {
+            amount: 1000.0,
+            paymentMethod: PaymentMethod.CASH,
+            notes: 'Nakit kapora',
+          },
+          {
+            amount: 500.0,
+            paymentMethod: PaymentMethod.CASH,
+            notes: 'Ek ödeme',
+          },
+        ],
+      },
     },
   });
-  console.log(`✅ Created order #${order.orderNumber} with ${order.items.length} items`);
+  console.log(`✅ Created order #${order2.orderNumber}`);
 }
 
 main()
