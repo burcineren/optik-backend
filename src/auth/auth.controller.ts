@@ -10,13 +10,19 @@ import {
   Res,
 } from "@nestjs/common";
 import { AuthService } from "./auth.service";
-import { RegisterDto, LoginDto } from "./dto/register.dto";
+import { UsersService } from "../users/users.service";
+import { RegisterDto } from "./dto/register.dto";
+import * as bcrypt from "bcrypt";
 import { AuthGuard } from "@nestjs/passport";
 import type { Response } from "express";
+import { LoginDto } from "./dto/login.dto";
 
 @Controller("auth")
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private usersService: UsersService,
+  ) {}
 
   @Post("register")
   @UsePipes(new ValidationPipe({ whitelist: true }))
@@ -33,6 +39,13 @@ export class AuthController {
     );
     if (!user) throw new Error("Invalid credentials");
     return this.authService.login(user);
+  }
+
+  @Post("reset-password")
+  async resetPassword(@Body() body: { email: string; newPassword: string }) {
+    const hashedPassword = await bcrypt.hash(body.newPassword, 10);
+    await this.usersService.updateUserPassword(body.email, hashedPassword);
+    return { message: "Password updated successfully" };
   }
   @Post("logout")
   async logout(@Res({ passthrough: true }) response: Response) {
