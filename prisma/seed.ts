@@ -88,6 +88,7 @@ async function main() {
       notes: 'Mavi ışık filtresi ve inceltme istendi.',
       userId: admin.id,
       customerId: customer1.id,
+      customerFullName: customer1.fullName,
       frames: {
         create: [
           {
@@ -148,6 +149,7 @@ async function main() {
       notes: 'Sadece güneş gözlüğü, numarasız.',
       userId: user.id,
       customerId: customer2.id,
+      customerFullName: customer2.fullName,
       frames: {
         create: [
           {

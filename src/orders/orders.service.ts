@@ -9,7 +9,7 @@ import { UpdateOrderDto } from "./dto/update-order.dto";
 
 @Injectable()
 export class OrdersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(createOrderDto: CreateOrderDto, userId: string) {
     const {
@@ -28,6 +28,7 @@ export class OrdersService {
 
     return this.prisma.$transaction(async (tx) => {
       let finalCustomerId: string;
+      let finalCustomerName: string; // <-- DEĞİŞİKLİK 1: İsim için değişken
 
       // 1. Determine the customer
       if (customerId) {
@@ -40,6 +41,7 @@ export class OrdersService {
           );
         }
         finalCustomerId = existingCustomer.id;
+        finalCustomerName = existingCustomer.fullName; // <-- DEĞİŞİKLİK 2: Mevcut isimi al
       } else if (customerData) {
         const newCustomer = await tx.customer.create({
           data: {
@@ -50,15 +52,16 @@ export class OrdersService {
             address: customerData.address,
             relative: customerData.relative
               ? {
-                  create: {
-                    fullName: customerData.relative.fullName,
-                    tcIdentityNumber: customerData.relative.tcIdentityNumber,
-                  },
-                }
+                create: {
+                  fullName: customerData.relative.fullName,
+                  tcIdentityNumber: customerData.relative.tcIdentityNumber,
+                },
+              }
               : undefined,
           },
         });
         finalCustomerId = newCustomer.id;
+        finalCustomerName = newCustomer.fullName; // <-- DEĞİŞİKLİK 3: Yeni isimi al
       } else {
         throw new BadRequestException(
           "Either customerId or a new customer object must be provided.",
@@ -68,8 +71,9 @@ export class OrdersService {
       // 2. Create the Order
       const order = await tx.order.create({
         data: {
-          ...orderData,
+          ...orderData, // orderData içindeki diğer alanlar (totalAmount vb.)
 
+          customerFullName: finalCustomerName, // <-- DEĞİŞİKLİK 4: Buraya eklendi
           orderNumber,
           userId,
           customerId: finalCustomerId,
@@ -137,15 +141,34 @@ export class OrdersService {
   }
 
   async update(id: string, updateOrderDto: UpdateOrderDto) {
-    // Separate relational fields from the direct order fields
-    const { customer, frames, prescriptions, customerId, ...orderData } =
-      updateOrderDto;
+    // 1. DTO içindeki karmaşık yapıları (ilişkileri) ve şemada olmayan alanları ayıkla
+    const {
+      frames,
+      prescriptions,
+      customer,
+      customerName,   // Use customerName instead of fullName
+      customerId,
+      ...orderData
+    } = updateOrderDto;
+    // 2. Prisma'ya gönderilecek temiz veriyi hazırla
+    const dataToUpdate: any = {
+      ...orderData,
+    };
 
-    // For now, this method only updates the scalar fields of the order.
-    // Updating relations would require more complex logic (e.g., deleting and recreating).
+    // Eğer isim güncellendiyse şemadaki doğru alana eşle
+    if (customerName) {
+      dataToUpdate.customerFullName = customerName;
+    }
+
+    // Eğer müşteri ID'si değişiyorsa ilişkiyi güncelle (isteğe bağlı)
+    if (customerId) {
+      dataToUpdate.customerId = customerId;
+    }
+
+    // 3. Güncelleme işlemini yap
     return this.prisma.order.update({
       where: { id },
-      data: orderData,
+      data: dataToUpdate,
     });
   }
 
@@ -159,14 +182,13 @@ export class OrdersService {
             name: true,
           },
         },
-        payments: true, // Include payments to calculate paid amount
+        payments: true,
       },
       orderBy: {
         orderDate: "desc",
       },
     });
 
-    // Calculate paidAmount for each order
     return orders.map((order) => {
       const paidAmount = order.payments.reduce((sum, p) => sum + p.amount, 0);
       const { payments, ...orderData } = order;
@@ -198,7 +220,7 @@ export class OrdersService {
             lenses: true,
           },
         },
-        payments: true, // Include payments
+        payments: true,
       },
     });
 
@@ -206,7 +228,6 @@ export class OrdersService {
       throw new NotFoundException(`Order with ID ${id} not found.`);
     }
 
-    // Calculate paidAmount for the single order
     const paidAmount = order.payments.reduce((sum, p) => sum + p.amount, 0);
     const { payments, ...orderData } = order;
 

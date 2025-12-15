@@ -41,7 +41,7 @@ class CreateRelativeDto {
   tcIdentityNumber: string;
 }
 
-class CreateCustomerDto {
+export class CreateCustomerDto {
   @IsString()
   @IsNotEmpty()
   fullName: string;
@@ -86,7 +86,7 @@ class CreateLensDto {
   lensIndex?: string;
 }
 
-class CreatePrescriptionDto {
+export class CreatePrescriptionDto {
   @IsEnum(EyeSide)
   @IsNotEmpty()
   eyeSide: EyeSide;
@@ -124,7 +124,7 @@ class CreatePrescriptionDto {
   lenses?: CreateLensDto[];
 }
 
-class CreateFrameDto {
+export class CreateFrameDto {
   @IsString()
   @IsOptional()
   brand?: string;
@@ -143,10 +143,13 @@ class CreateFrameDto {
 }
 
 export class CreateOrderDto {
-  // Customer can be an existing ID or a new customer object
   @IsOptional()
   @IsString()
   customerId?: string;
+
+  @IsOptional()
+  @IsString()
+  customerName?: string;
 
   @IsString()
   @IsOptional()
